@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Application Form</title>
+  <!-- SurveyJS Styles -->
+  <link href="https://unpkg.com/survey-core/survey-core.min.css" type="text/css" rel="stylesheet">
+  
+  <!-- SurveyJS Scripts -->
+  <script type="text/javascript" src="https://unpkg.com/survey-core/survey.core.min.js"></script>
+  <script type="text/javascript" src="https://unpkg.com/survey-js-ui/survey-js-ui.min.js"></script>
+
+  <script type="text/javascript" src="constants.js"></script>
+  
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+    }
+    
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 70px;
+      background: white;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      z-index: 1000;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .logo {
+        height: 50px;
+        width: auto;
+        object-fit: contain;
+        max-width: 200px;
+    }
+
+    
+    #saveDraftBtn {
+      padding: 10px 20px;
+      font-size: 14px;
+      cursor: pointer;
+      background-color: #FF7F50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      transition: background-color 0.3s;
+    }
+    
+    #saveDraftBtn:hover {
+      background-color: #ff6a3d;
+    }
+    
+    .content {
+      margin-top: 90px;
+      padding: 20px;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    #statusPanel {
+      display: none;
+      border: 1px solid #FF7F50;
+      background-color: #fff5f2;
+      padding: 16px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+    }
+    
+    #statusPanel strong {
+      color: #333;
+    }
+    
+    #statusPanel code {
+      background-color: #f0f0f0;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+      color: #FF7F50;
+      font-weight: bold;
+    }
+    
+    #statusPanel button {
+      padding: 6px 12px;
+      margin-left: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      background-color: #FF7F50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+    }
+    
+    #statusPanel button:hover {
+      background-color: #ff6a3d;
+    }
+    
+    #surveyContainer {
+      background: white;
+      padding: 30px;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    /* Override SurveyJS button colors */
+    .sv-btn {
+      background-color: #FF7F50 !important;
+    }
+    
+    .sv-btn:hover {
+      background-color: #ff6a3d !important;
+    }
+
+    /* Custom Alert Modal */
+    .custom-alert-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 10000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .custom-alert-box {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+    }
+
+    .custom-alert-icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+    }
+
+    .custom-alert-message {
+      font-size: 16px;
+      color: #333;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .custom-alert-button {
+      padding: 10px 30px;
+      font-size: 14px;
+      cursor: pointer;
+      background-color: #FF7F50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      transition: background-color 0.3s;
+    }
+
+    .custom-alert-button:hover {
+      background-color: #ff6a3d;
+    }
+
+    /* Loading overlay */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.95);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #f0f0f0;
+      border-top: 4px solid #FF7F50;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      margin-top: 20px;
+      font-size: 16px;
+      color: #333;
+    }
+
+    .page-content {
+      opacity: 0;
+      transition: opacity 0.3s ease-in;
+    }
+
+    .page-content.loaded {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+    <!-- Loading overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Loading survey...</div>
+    </div>
+
+    <div class="page-content" id="pageContent">
+      <div class="header">
+        <img src="media/Logo.png" alt="Application Portal Logo" class="logo">
+        <button id="saveDraftBtn">Save Draft</button>
+      </div>
+    
+    <div class="content">
+      <div id="statusPanel">
+        <strong id="statusMessage"></strong>
+        <div style="margin-top:8px;">
+          <span>Application ID:</span>
+          <code id="appIdDisplay"></code>
+          <button onclick="copyApplicationId()">Copy</button>
+        </div>
+      </div>
+      <div id="surveyContainer"></div>
+    </div>
+
+    <!-- Custom Alert Modal -->
+    <div id="customAlertOverlay" class="custom-alert-overlay">
+      <div class="custom-alert-box">
+        <div class="custom-alert-icon">⚠️</div>
+        <div id="customAlertMessage" class="custom-alert-message"></div>
+        <button class="custom-alert-button" onclick="closeCustomAlert()">OK</button>
+      </div>
+    </div>
+
+    <script>
+        // Custom alert function
+        function showCustomAlert(message) {
+          document.getElementById("customAlertMessage").textContent = message;
+          document.getElementById("customAlertOverlay").style.display = "flex";
+        }
+
+        function closeCustomAlert() {
+          document.getElementById("customAlertOverlay").style.display = "none";
+        }
+
+        const applicationId = sessionStorage.getItem("applicationId");
+        const schema = JSON.parse(sessionStorage.getItem("surveySchema"));
+        const answers = JSON.parse(sessionStorage.getItem("surveyAnswers") || "{}");
+        const saveDraftBtn = document.getElementById("saveDraftBtn");
+        console.log("Loaded schema:", schema);
+        if (!applicationId || !schema) {
+        showCustomAlert("Invalid session. Please start again.");
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 2000);
+        }
+        // Initialize SurveyJS model
+        const survey = new Survey.Model(schema);
+        survey.applyTheme({
+            "cssVariables": {
+                "--sjs-primary-backcolor": "#FF7F50",
+                "--sjs-primary-backcolor-dark": "#ff6a3d",
+                "--sjs-primary-backcolor-light": "#fff5f2"
+            }
+        });
+        // Resume mode
+        if (Object.keys(answers).length > 0) {
+        survey.data = answers;
+        }
+        // Survey completion handler
+        survey.onComplete.add(async (sender) => {
+        try {
+            const response = await fetch(
+            `${API_BASE}/${applicationId}/submit`,
+            {
+                method: "POST",
+                headers: {
+                "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                answers: sender.data
+                })
+            }
+            );
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.error || "Failed to submit application");
+            }
+            showStatus(
+                "✅ Application submitted successfully. Please save your Application ID.",
+                result.applicationId
+            );
+            
+            sessionStorage.clear();
+        } catch (err) {
+            sender.clear(false);
+            sender.data = sender.data;
+            showCustomAlert(err.message);
+        }
+        });
+        function showStatus(message, applicationId) {
+            document.getElementById("statusPanel").style.display = "block";
+            document.getElementById("statusMessage").textContent = message;
+            document.getElementById("appIdDisplay").textContent = applicationId;
+        }
+        function copyApplicationId() {
+            const id = document.getElementById("appIdDisplay").textContent;
+            navigator.clipboard.writeText(id);
+        }
+        saveDraftBtn.addEventListener("click", async () => {
+            try {
+            const response = await fetch(
+                `${API_BASE}/${applicationId}/draft`,
+                {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    answers: survey.data
+                })
+                }
+            );
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.error || "Failed to submit application");
+            }
+            showStatus(
+                "💾 Draft saved. You can resume later using this Application ID.",
+                result.applicationId
+            );
+            } catch (err) {
+            showCustomAlert(err.message);
+            }
+        });
+        // Render survey
+        survey.render(document.getElementById("surveyContainer"));
+
+        // Hide loading overlay and show content
+        setTimeout(() => {
+          document.getElementById("loadingOverlay").style.display = "none";
+          document.getElementById("pageContent").classList.add("loaded");
+        }, 300);
+    </script>
+</body>
+</html>
