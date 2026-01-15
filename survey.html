@@ -266,7 +266,7 @@
         const schema = JSON.parse(sessionStorage.getItem("surveySchema"));
         const answers = JSON.parse(sessionStorage.getItem("surveyAnswers") || "{}");
         const saveDraftBtn = document.getElementById("saveDraftBtn");
-        console.log("Loaded schema:", schema);
+        
         if (!applicationId || !schema) {
         showCustomAlert("Invalid session. Please start again.");
         setTimeout(() => {
