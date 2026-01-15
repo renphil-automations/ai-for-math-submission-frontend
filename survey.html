@@ -275,6 +275,7 @@
         }
         // Initialize SurveyJS model
         const survey = new Survey.Model(schema);
+
         survey.applyTheme({
             "cssVariables": {
                 "--sjs-primary-backcolor": "#FF7F50",
@@ -282,10 +283,12 @@
                 "--sjs-primary-backcolor-light": "#fff5f2"
             }
         });
+
         // Resume mode
         if (Object.keys(answers).length > 0) {
         survey.data = answers;
         }
+        
         // Survey completion handler
         survey.onComplete.add(async (sender) => {
         try {
@@ -317,37 +320,40 @@
             showCustomAlert(err.message);
         }
         });
+        
         function showStatus(message, applicationId) {
             document.getElementById("statusPanel").style.display = "block";
             document.getElementById("statusMessage").textContent = message;
             document.getElementById("appIdDisplay").textContent = applicationId;
         }
+
         function copyApplicationId() {
             const id = document.getElementById("appIdDisplay").textContent;
             navigator.clipboard.writeText(id);
         }
+        
         saveDraftBtn.addEventListener("click", async () => {
             try {
-            const response = await fetch(
-                `${API_BASE}/${applicationId}/draft`,
-                {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    answers: survey.data
-                })
-                }
-            );
-            const result = await response.json();
-            if (!response.ok) {
-                throw new Error(result.error || "Failed to submit application");
-            }
-            showStatus(
-                "💾 Draft saved. You can resume later using this Application ID.",
-                result.applicationId
-            );
+              const response = await fetch(
+                  `${API_BASE}/${applicationId}/draft`,
+                  {
+                  method: "POST",
+                  headers: {
+                      "Content-Type": "application/json"
+                  },
+                  body: JSON.stringify({
+                      answers: survey.data
+                  })
+                  }
+              );
+              const result = await response.json();
+              if (!response.ok) {
+                  throw new Error(result.error || "Failed to submit application");
+              }
+              showStatus(
+                  "💾 Draft saved. You can resume later using this Application ID.",
+                  result.applicationId
+              );
             } catch (err) {
             showCustomAlert(err.message);
             }
