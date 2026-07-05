@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Application Form</title>
+  <!-- SurveyJS Styles -->
+  <link href="https://unpkg.com/survey-core/survey-core.min.css" type="text/css" rel="stylesheet">
+  <link href="https://db.onlinewebfonts.com/c/4cae543bca37f9c0d67178805b31cbb1?family=Plain-Ultralight" rel="stylesheet">
+  
+  <!-- SurveyJS Scripts -->
+  <script type="text/javascript" src="https://unpkg.com/survey-core/survey.core.min.js"></script>
+  <script type="text/javascript" src="https://unpkg.com/survey-js-ui/survey-js-ui.min.js"></script>
+
+  <script type="text/javascript" src="constants.js?v=2"></script>
+  
+  <style>
+    body {
+      font-family: "Plain-Ultralight", sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+    }
+    
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 70px;
+      background: white;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      z-index: 1000;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .logo {
+        height: 50px;
+        width: auto;
+        object-fit: contain;
+        max-width: 200px;
+    }
+
+    .site-title {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #333;
+      margin: 12px 0 4px;
+    }
+
+    .tagline {
+      font-size: 14px;
+      color: #64748b;
+      font-weight: 400;
+    }
+
+    #saveDraftBtn {
+      padding: 10px 20px;
+      font-size: 14px;
+      cursor: pointer;
+      background-color: #FF7F50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      transition: background-color 0.3s;
+    }
+    
+    #saveDraftBtn:hover {
+      background-color: #ff6a3d;
+    }
+    
+    .content {
+      margin-top: 90px;
+      /* Add bottom padding so content isn't hidden behind sticky banner */
+      padding: 20px;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    /* ─── Application State Banner ─────────────────────────────── */
+    #applicationStateBanner {
+      display: none;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 500;
+      border-left: 4px solid;
+    }
+
+    #applicationStateBanner.status-accepted {
+      background-color: #d4edda;
+      border-color: #28a745;
+      color: #155724;
+    }
+
+    #applicationStateBanner.status-rejected {
+      background-color: #f8d7da;
+      border-color: #dc3545;
+      color: #721c24;
+    }
+
+    #applicationStateBanner.status-pending {
+      background-color: #fff3cd;
+      border-color: #ffc107;
+      color: #856404;
+    }
+
+    #applicationStateBanner .status-icon {
+      margin-right: 10px;
+      font-size: 20px;
+    }
+    
+    #surveyContainer {
+      background: white;
+      padding: 30px;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    /* Override SurveyJS button colors */
+    .sv-btn {
+      background-color: #FF7F50 !important;
+    }
+    
+    .sv-btn:hover {
+      background-color: #ff6a3d !important;
+    }
+
+    /* ─── Custom Alert Modal ────────────────────────────────────── */
+    .custom-alert-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 10000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .custom-alert-box {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+    }
+
+    .custom-alert-icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+    }
+
+    .custom-alert-message {
+      font-size: 16px;
+      color: #333;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .custom-alert-button {
+      padding: 10px 30px;
+      font-size: 14px;
+      cursor: pointer;
+      background-color: #FF7F50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      transition: background-color 0.3s;
+    }
+
+    .custom-alert-button:hover {
+      background-color: #ff6a3d;
+    }
+
+        /* Sticky Application ID Banner (session-expiry style) */
+    #stickyAppIdBanner {
+      position: fixed;
+      top: 70px;
+      left: 0;
+      right: 0;
+      z-index: 999;
+      width: 100%;
+      background-color: rgba(255, 127, 80, 0.08);
+      border-bottom: 1px solid rgba(255, 127, 80, 0.3);
+      display: none;
+      transform: translateY(-100%);
+      transition: transform 0.3s ease;
+      pointer-events: none;
+    }
+
+    #stickyAppIdBanner.visible {
+      display: block;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .sticky-banner-inner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 6px 12px;
+      padding: 9px 20px;
+      text-align: center;
+    }
+
+    .sticky-banner-message {
+      font-size: 14px;
+      font-weight: 500;
+      color: #b83a08;
+    }
+
+    .sticky-banner-id {
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: #7a2500;
+      background: rgba(255, 127, 80, 0.15);
+      border: 1px solid rgba(255, 127, 80, 0.45);
+      border-radius: 4px;
+      padding: 2px 8px;
+      user-select: all;
+      white-space: nowrap;
+    }
+
+    .sticky-copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 12px;
+      font-size: 13px;
+      font-family: "Plain-Ultralight", sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      background-color: #FF7F50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .sticky-copy-btn:hover  { background-color: #ff6a3d; }
+    .sticky-copy-btn.copied { background-color: #28a745; }
+
+    .sticky-dismiss-btn {
+      background: none;
+      border: none;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      color: #b83a08;
+      opacity: 0.5;
+      padding: 0 2px;
+      transition: opacity 0.2s;
+      flex-shrink: 0;
+    }
+
+    .sticky-dismiss-btn:hover { opacity: 1; }
+
+    @media (max-width: 500px) {
+      .sticky-banner-inner { flex-direction: column; gap: 6px; }
+    }
+
+    /* ─── Loading overlay ───────────────────────────────────────── */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.95);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #f0f0f0;
+      border-top: 4px solid #FF7F50;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      margin-top: 20px;
+      font-size: 16px;
+      color: #333;
+    }
+
+    .page-content {
+      opacity: 0;
+      transition: opacity 0.3s ease-in;
+    }
+
+    .page-content.loaded {
+      opacity: 1;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+    }
+
+    .button-loading {
+      position: relative;
+    }
+
+    .button-loading::after {
+      content: "";
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      top: 50%;
+      right: 10px;
+      margin-top: -7px;
+      border: 2px solid white;
+      border-radius: 50%;
+      border-top-color: transparent;
+      animation: spin 0.6s linear infinite;
+    }
+
+    .sd-root-modern {
+      --sjs-font-family: "Plain-Ultralight", sans-serif;
+    }
+
+    /* Responsive tweaks */
+    @media (max-width: 600px) {
+      .sticky-banner-message { display: none; }
+      .sticky-banner-divider { display: none; }
+    }
+  </style>
+</head>
+<body>
+    <!-- Loading overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Loading survey...</div>
+    </div>
+
+    <div class="page-content" id="pageContent">
+      <div class="header">
+        <div style="display: flex; align-items: center; gap: 20px;">
+          <img src="media/Logo.png" alt="Application Portal Logo" class="logo">
+          <h1 style="font-size: 24px; color: #383737; margin: 0; font-weight: 900;">AI for Math Fund</h1>
+        </div>
+        <button id="saveDraftBtn">Save Draft</button>
+      </div>
+    </div>
+    
+    <div class="content">
+      <!-- Application State Banner (inline, top of page) -->
+      <div id="applicationStateBanner"></div>
+      <div id="surveyContainer"></div>
+    </div>
+
+        <!-- Sticky Application ID Banner -->
+    <div id="stickyAppIdBanner" role="status" aria-live="polite">
+      <div class="sticky-banner-inner">
+        <span class="sticky-banner-message" id="stickyBannerMessage"></span>
+        <span class="sticky-banner-id" id="stickyAppId"></span>
+        <button class="sticky-copy-btn" id="stickyCopyBtn" onclick="stickyBannerCopy()">Copy</button>
+        <button class="sticky-dismiss-btn" onclick="hideStickyBanner()" title="Dismiss">&times;</button>
+      </div>
+    </div>
+
+    <!-- Custom Alert Modal -->
+    <div id="customAlertOverlay" class="custom-alert-overlay">
+      <div class="custom-alert-box">
+        <div class="custom-alert-icon">⚠️</div>
+        <div id="customAlertMessage" class="custom-alert-message"></div>
+        <button class="custom-alert-button" onclick="closeCustomAlert()">OK</button>
+      </div>
+    </div>
+
+    <script>
+
+      // ─── Custom alert ──────────────────────────────────────────
+      function showCustomAlert(message) {
+        document.getElementById("customAlertMessage").textContent = message;
+        document.getElementById("customAlertOverlay").style.display = "flex";
+      }
+
+      function closeCustomAlert() {
+        document.getElementById("customAlertOverlay").style.display = "none";
+      }
+
+      function normalizeApplicationId(rawId) {
+        if (rawId === null || rawId === undefined) return null;
+        const id = String(rawId).trim();
+        if (!id || id === "null" || id === "undefined") return null;
+        return id;
+      }
+
+      // ─── Sticky Application ID Banner ─────────────────────────
+      function showStickyBanner(applicationId, type /* "draft" | "submitted" */, backendMessage = null) {
+        const idEl    = document.getElementById("stickyAppId");
+        const copyBtn = document.getElementById("stickyCopyBtn");
+        const msgEl   = document.getElementById("stickyBannerMessage");
+        const normalizedId = normalizeApplicationId(applicationId);
+
+        if (normalizedId) {
+          idEl.textContent = `Application ID: ${normalizedId}`;
+          idEl.dataset.applicationId = normalizedId;
+          idEl.style.display = "inline-block";
+          copyBtn.style.display = "inline-flex";
+        } else {
+          idEl.textContent = "";
+          delete idEl.dataset.applicationId;
+          idEl.style.display = "none";
+          copyBtn.style.display = "none";
+        }
+
+        if (type === "submitted") {
+          msgEl.textContent = "Thank you for your submission. You should separately receive a confirmation email.";
+          msgEl.style.display = "block";
+        } else {
+          // For drafts, just show the Application ID with copy button (no message)
+          msgEl.textContent = "";
+          msgEl.style.display = "none";
+        }
+
+        document.getElementById("stickyAppIdBanner").classList.add("visible");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function hideStickyBanner() {
+        document.getElementById("stickyAppIdBanner").classList.remove("visible");
+      }
+
+      function stickyBannerCopy() {
+        const idEl = document.getElementById("stickyAppId");
+        const id  = idEl.dataset.applicationId || "";
+        const btn = document.getElementById("stickyCopyBtn");
+        navigator.clipboard.writeText(id).then(() => {
+          btn.textContent = "Copied!";
+          btn.classList.add("copied");
+          setTimeout(() => {
+            btn.textContent = "Copy";
+            btn.classList.remove("copied");
+          }, 2000);
+        });
+      }
+
+      // ─── Application state banner (top of page, existing logic) ─
+      function displayApplicationState(state) {
+        if (!state || !state.mode || !state.status) return;
+
+        const banner = document.getElementById("applicationStateBanner");
+        const mode   = state.mode.toLowerCase();
+        const status = state.status.toLowerCase();
+
+        let message = "", icon = "", cssClass = "";
+
+        if (mode === "abstract") {
+          if (status === "accepted")      { icon = "✅"; message = "Congratulations! Your abstract was selected to advance to the full proposal stage.";         cssClass = "status-accepted"; }
+          else if (status === "rejected") { icon = "❌"; message = "Unfortunately, your abstract was not accepted.";            cssClass = "status-rejected"; }
+          else if (status === "pending")  { icon = "⏳"; message = "Your abstract is currently under review.";                  cssClass = "status-pending";  }
+        } else if (mode === "full proposal") {
+          if (status === "accepted")      { icon = "🎉"; message = "Congratulations! Your full proposal has been accepted.";    cssClass = "status-accepted"; }
+          else if (status === "rejected") { icon = "❌"; message = "Unfortunately, your full proposal was not accepted.";       cssClass = "status-rejected"; }
+          else if (status === "pending")  { icon = "⏳"; message = "Your full proposal is currently under review.";             cssClass = "status-pending";  }
+        }
+
+        if (message) {
+          banner.innerHTML = `<span class="status-icon">${icon}</span>${message}`;
+          banner.className = cssClass;
+          banner.style.display = "block";
+        }
+      }
+
+      function hideApplicationStateBanner() {
+        const banner = document.getElementById("applicationStateBanner");
+        banner.style.display = "none";
+        banner.className = "";
+        banner.innerHTML = "";
+      }
+
+      console.log("Survey page loaded");
+
+      // ─── Session data ──────────────────────────────────────────
+      let applicationId    = normalizeApplicationId(sessionStorage.getItem("applicationId"));
+      const schema           = JSON.parse(sessionStorage.getItem("surveySchema"));
+      const answers          = JSON.parse(sessionStorage.getItem("surveyAnswers") || "{}");
+      const applicationState = JSON.parse(sessionStorage.getItem("applicationState") || "null");
+      const isReadOnly       = sessionStorage.getItem("isReadOnly") === "true";
+      const saveDraftBtn     = document.getElementById("saveDraftBtn");
+      
+      if (!schema) {
+        showCustomAlert("Invalid session. Please start again.");
+        setTimeout(() => { window.location.href = "/"; }, 2000);
+      }
+      
+      // ─── Save Draft button visibility ──────────────────────────
+      // The Save Draft button is shown only when the form is editable
+      // (i.e. not read-only). The Complete button is managed by the
+      // backend via the form schema, so we don't touch it here.
+      if (isReadOnly) {
+        saveDraftBtn.style.display = "none";
+      }
+
+      displayApplicationState(applicationState);
+
+      // ─── SurveyJS setup ───────────────────────────────────────
+      const survey = new Survey.Model(schema);
+
+      survey.onTextMarkdown.add(function(survey, options) {
+        options.html = options.text;
+      });
+      
+      survey.applyTheme({
+        "cssVariables": {
+          "--sjs-primary-backcolor":       "#FF7F50",
+          "--sjs-primary-backcolor-dark":  "#ff6a3d",
+          "--sjs-primary-backcolor-light": "#fff5f2"
+        }
+      });
+
+      if (Object.keys(answers).length > 0) {
+        survey.data = answers;
+      }
+      
+      // Survey submission
+      survey.onComplete.add(async (sender) => {
+        const data = sender.data;
+        if (data.applicants) {
+          data.applicants.forEach(applicant => {
+            if (applicant.institutions) {
+              applicant.institutions.forEach(inst => { delete inst.selectExistingInstitution; });
+            }
+          });
+        }
+
+        document.getElementById("loadingOverlay").style.display = "flex";
+        document.querySelector(".loading-text").textContent = "Submitting application...";
+
+        try {
+          const requestApplicationId = normalizeApplicationId(applicationId);
+          const response = await fetch(`${PROXY_API_BASE}/${requestApplicationId || 'null'}/submit`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ answers: sender.data, applicationId: requestApplicationId, is_draft: false })
+          });
+
+          // Handle rate limit error (server is busy)
+          if (response.status === 429) {
+            throw new Error("The server is busy at this time. Please try again in 1 minute.");
+          }
+
+          const result = await response.json();
+          if (response.status === 202) {
+            const resultingApplicationId = normalizeApplicationId(result.applicationId) || requestApplicationId;
+            // Success: application is being processed in the background
+            setTimeout(() => {
+              document.getElementById("loadingOverlay").style.display = "none";
+              showStickyBanner(resultingApplicationId, "submitted", result.message);
+              hideApplicationStateBanner();
+              sessionStorage.clear();
+            }, 800);
+          } else {
+            throw new Error(result.error || "Failed to submit application");
+          }
+        } catch (err) {
+          document.getElementById("loadingOverlay").style.display = "none";
+          document.querySelector(".loading-text").textContent = "Loading survey...";
+          sender.clear(false);
+          sender.data = sender.data;
+          showCustomAlert(err.message);
+        }
+      });
+
+      // ─── Institution dropdown helpers ──────────────────────────
+      function getInstitutionDataKey(institution) {
+        const name    = (institution.name   || '').trim().toLowerCase();
+        const type    = (institution.type   || '').trim().toLowerCase();
+        const domain  = (institution.domain || '').trim().toLowerCase();
+        const country = (institution.country|| '').trim().toLowerCase();
+        if (!name || !type || !domain) return null;
+        return `${name}|||${type}|||${domain}|||${country}`;
+      }
+
+      function updateInstitutionDropdowns(survey) {
+        const applicants         = survey.getValue("applicants") || [];
+        const applicantsQuestion = survey.getQuestionByName("applicants");
+        if (!applicantsQuestion) return;
+
+        applicantsQuestion.panels.forEach((applicantPanel, applicantIndex) => {
+          const institutionsQuestion = applicantPanel.getQuestionByName("institutions");
+          if (!institutionsQuestion) return;
+
+          institutionsQuestion.panels.forEach((instPanel, currentInstIdx) => {
+            const dropdown = instPanel.getQuestionByName("selectExistingInstitution");
+            if (!dropdown) return;
+
+            const seenInstitutions = new Map();
+            applicants.forEach((applicant, appIdx) => {
+              (applicant.institutions || []).forEach((inst, instIdx) => {
+                if (appIdx === applicantIndex && instIdx === currentInstIdx) return;
+                if (!inst.name) return;
+                const dataKey = getInstitutionDataKey(inst);
+                if (!dataKey) return;
+                if (!seenInstitutions.has(dataKey)) {
+                  seenInstitutions.set(dataKey, { appIdx, instIdx, displayName: inst.name });
+                }
+              });
+            });
+
+            const nameCount = new Map();
+            for (const item of seenInstitutions.values()) {
+              const n = item.displayName.trim().toLowerCase();
+              nameCount.set(n, (nameCount.get(n) || 0) + 1);
+            }
+
+            const nameCounter = new Map();
+            const institutionChoices = Array.from(seenInstitutions.values()).map(item => {
+              const n = item.displayName.trim().toLowerCase();
+              let displayText = item.displayName;
+              if (nameCount.get(n) > 1) {
+                const count = (nameCounter.get(n) || 0) + 1;
+                nameCounter.set(n, count);
+                displayText = `${item.displayName} (${count})`;
+              }
+              return { value: `${item.appIdx}___${item.instIdx}`, text: displayText };
+            });
+
+            const currentValue = dropdown.value;
+            dropdown.choices = institutionChoices;
+            if (currentValue && !institutionChoices.some(c => c.value === currentValue)) {
+              dropdown.value = null;
+            }
+          });
+        });
+      }
+
+      survey.onValueChanged.add(function(sender, options) {
+        if (options.question.parentQuestion?.name === "institutions") {
+          const fn = options.name;
+          if (fn === "name" || fn === "type" || fn === "domain" || fn === "country") {
+            updateInstitutionDropdowns(sender);
+          }
+        }
+      });
+
+      survey.onDynamicPanelRemoved.add(function(sender) {
+        setTimeout(() => updateInstitutionDropdowns(sender), 50);
+        // If the removed applicant was the main one, default the first remaining applicant
+        setTimeout(() => {
+          const applicants = sender.getValue("applicants") || [];
+          if (applicants.length > 0) {
+            const hasMain = applicants.some(a => a.isMainApplicant === "Yes");
+            if (!hasMain) {
+              applicants[0].isMainApplicant = "Yes";
+              sender.setValue("applicants", applicants);
+            }
+          }
+        }, 50);
+      });
+
+      survey.onDynamicPanelAdded.add(function(sender) {
+        setTimeout(() => updateInstitutionDropdowns(sender), 50);
+      });
+
+      let isProcessing = false;
+
+      survey.onDynamicPanelItemValueChanged.add(function(sender, options) {
+        if (options.name === "isMainApplicant" && !isProcessing) {
+          isProcessing = true;
+          const applicants = sender.getValue("applicants") || [];
+          if (options.value === "Yes") {
+            applicants.forEach((applicant, index) => {
+              applicant.isMainApplicant = (index === options.panelIndex) ? "Yes" : "No";
+            });
+          } else {
+            // If no applicant is set as main, default the first one
+            const hasMain = applicants.some(a => a.isMainApplicant === "Yes");
+            if (!hasMain && applicants.length > 0) {
+              applicants[0].isMainApplicant = "Yes";
+            }
+          }
+          sender.setValue("applicants", applicants);
+          setTimeout(() => { isProcessing = false; }, 100);
+        }
+
+        if (options.name === "selectExistingInstitution") {
+          const instPanel = options.panel;
+          if (!instPanel) return;
+
+          if (!options.value) {
+            ["name","type","typeOther","domain","country","city"].forEach(f => {
+              instPanel.getQuestionByName(f).value = null;
+            });
+            return;
+          }
+
+          const parts = options.value.split("___");
+          if (parts.length === 2) {
+            const sourceAppIdx  = parseInt(parts[0]);
+            const sourceInstIdx = parseInt(parts[1]);
+            const applicants    = sender.getValue("applicants") || [];
+
+            if (applicants[sourceAppIdx]?.institutions?.[sourceInstIdx]) {
+              const src = { ...applicants[sourceAppIdx].institutions[sourceInstIdx] };
+              instPanel.getQuestionByName("name").value    = src.name;
+              instPanel.getQuestionByName("type").value    = src.type;
+              if (src.typeOther)  instPanel.getQuestionByName("typeOther").value = src.typeOther;
+              instPanel.getQuestionByName("domain").value  = src.domain;
+              instPanel.getQuestionByName("country").value = src.country;
+              if (src.city)       instPanel.getQuestionByName("city").value      = src.city;
+            }
+          }
+        }
+      });
+      
+      // ─── Save draft ────────────────────────────────────────────
+      saveDraftBtn.addEventListener("click", async () => {
+        // // Require at least one applicant with a valid email before saving a draft
+        // const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        // const applicantsForDraft = survey.data?.applicants || [];
+        // const hasValidEmail = applicantsForDraft.some(
+        //   a => a && a.email && emailRegex.test(String(a.email).trim())
+        // );
+        // if (!hasValidEmail) {
+        //   showCustomAlert("Please provide a valid email address for at least one applicant before saving a draft.");
+        //   return;
+        // }
+
+        saveDraftBtn.disabled    = true;
+        saveDraftBtn.textContent = "Saving...";
+        saveDraftBtn.style.opacity = "0.7";
+
+        try {
+          const requestApplicationId = normalizeApplicationId(applicationId);
+          const response = await fetch(`${PROXY_API_BASE}/${requestApplicationId || 'null'}/draft`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ answers: survey.data, applicationId: requestApplicationId, is_draft: true })
+          });
+
+          // Handle rate limit error (server is busy)
+          if (response.status === 429) {
+            throw new Error("The server is busy at this time. Please try again in 1 minute.");
+          }
+
+          const result = await response.json();
+          if (response.status === 202) {
+            const resultingApplicationId = normalizeApplicationId(result.applicationId) || requestApplicationId;
+            // Success: draft is being processed in the background
+            if (resultingApplicationId) {
+              applicationId = resultingApplicationId;
+              sessionStorage.setItem("applicationId", applicationId);
+            }
+            
+            showStickyBanner(resultingApplicationId, "draft", result.message);
+            hideApplicationStateBanner();
+          } else {
+            throw new Error(result.error || "Failed to save draft");
+          }
+        } catch (err) {
+          showCustomAlert(err.message);
+        } finally {
+          saveDraftBtn.disabled    = false;
+          saveDraftBtn.textContent = "Save Draft";
+          saveDraftBtn.style.opacity = "1";
+        }
+      });
+
+      // ─── Render ────────────────────────────────────────────────
+      survey.render(document.getElementById("surveyContainer"));
+
+      setTimeout(() => updateInstitutionDropdowns(survey), 200);
+
+      setTimeout(() => {
+        const applicants = survey.getValue("applicants") || [];
+        if (applicants.length > 0) {
+          const hasMain = applicants.some(a => a.isMainApplicant === "Yes");
+          if (!hasMain) {
+            applicants[0].isMainApplicant = "Yes";
+            survey.setValue("applicants", applicants);
+          }
+        }
+      }, 100);
+
+      setTimeout(() => {
+        document.getElementById("loadingOverlay").style.display = "none";
+        document.getElementById("pageContent").classList.add("loaded");
+      }, 300);
+    </script>
+</body>
+</html>

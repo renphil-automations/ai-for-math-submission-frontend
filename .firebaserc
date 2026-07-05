@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "ai-for-math-platform"
+  },
+  "targets": {
+    "ai-for-math-platform": {
+      "hosting": {
+        "proposal-submission-form-site": [
+          "proposal-submission-form"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
